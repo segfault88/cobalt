@@ -1,0 +1,7 @@
+[workspace]
+resolver = "3"
+members = ["app"]
+
+[workspace.dependencies]
+bincode = { version = "2.0.1", features = ["serde"] }
+serde = { version = "1.0.228", features = ["serde_derive"] }
