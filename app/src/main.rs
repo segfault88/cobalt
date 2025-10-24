@@ -1,3 +1,5 @@
+use hexasphere::shapes::IcoSphere;
+use nalgebra_glm as glm;
 use std::sync::Arc;
 use winit::{
     application::ApplicationHandler,
@@ -277,6 +279,9 @@ impl ApplicationHandler for App {
 pub fn main() {
     env_logger::init();
     log::info!("Starting Cobalt");
+
+    let _s = IcoSphere::new(20, |_| ());
+    let _rp = _s.raw_points();
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
