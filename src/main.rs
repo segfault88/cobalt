@@ -82,7 +82,7 @@ impl State {
             .copied()
             .unwrap_or(surface_caps.formats[0]);
 
-        println!("format: {:?}", surface_format);
+        log::info!("Surface format: {:?}", surface_format);
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -234,11 +234,13 @@ impl ApplicationHandler for App {
         _window_id: WindowId,
         event: WindowEvent,
     ) {
+        let Some(state) = self.state.as_mut() else {
+            return;
+        };
+
         // Let state handle input first
-        if let Some(state) = &mut self.state {
-            if state.input(&event) {
-                return;
-            }
+        if state.input(&event) {
+            return;
         }
 
         match event {
@@ -247,25 +249,21 @@ impl ApplicationHandler for App {
                 event_loop.exit();
             }
             WindowEvent::Resized(physical_size) => {
-                if let Some(state) = &mut self.state {
-                    state.resize(physical_size);
-                }
+                state.resize(physical_size);
             }
             WindowEvent::RedrawRequested => {
-                if let Some(state) = &mut self.state {
-                    state.update();
-                    match state.render() {
-                        Ok(_) => {}
-                        Err(wgpu::SurfaceError::Lost) => {
-                            let size = state.window_size();
-                            state.resize(size);
-                        }
-                        Err(wgpu::SurfaceError::OutOfMemory) => {
-                            log::error!("Out of memory");
-                            event_loop.exit();
-                        }
-                        Err(e) => log::error!("Render error: {:?}", e),
+                state.update();
+                match state.render() {
+                    Ok(_) => {}
+                    Err(wgpu::SurfaceError::Lost) => {
+                        let size = state.window_size();
+                        state.resize(size);
                     }
+                    Err(wgpu::SurfaceError::OutOfMemory) => {
+                        log::error!("Out of memory");
+                        event_loop.exit();
+                    }
+                    Err(e) => log::error!("Render error: {:?}", e),
                 }
 
                 if let Some(window) = &self.window {
@@ -282,7 +280,7 @@ impl ApplicationHandler for App {
                 ..
             } => match (code, key_state) {
                 (KeyCode::Escape, ElementState::Pressed) => {
-                    println!("escape pressed, exiting");
+                    log::info!("Escape pressed, exiting");
                     event_loop.exit();
                 }
                 _ => {}
@@ -302,7 +300,7 @@ pub fn main() {
     let _s = IcoSphere::new(50, |_| ());
     let _rp = _s.raw_points();
 
-    println!("icosphere in: {:?}", Instant::now().duration_since(start));
+    log::info!("Icosphere in: {:?}", Instant::now().duration_since(start));
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
