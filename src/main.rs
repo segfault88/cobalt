@@ -1,7 +1,8 @@
+use env_logger::Env;
 use hexasphere::shapes::IcoSphere;
-// use nalgebra_glm as glm;
 use std::sync::Arc;
 use std::time::Instant;
+use wgpu::{ExperimentalFeatures, Trace};
 use winit::{
     application::ApplicationHandler,
     event::{ElementState, KeyEvent, WindowEvent},
@@ -11,6 +12,7 @@ use winit::{
 };
 
 /// Main application state holding wgpu resources and game state
+#[derive(Default)]
 pub struct App {
     window: Option<Arc<Window>>,
     state: Option<State>,
@@ -39,7 +41,7 @@ impl State {
         log::info!("Initializing wgpu...");
 
         // Create wgpu instance
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
+        let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
             backends: wgpu::Backends::PRIMARY,
             ..Default::default()
         });
@@ -61,15 +63,14 @@ impl State {
 
         // Request device and queue
         let (device, queue) = adapter
-            .request_device(
-                &wgpu::DeviceDescriptor {
-                    required_features: wgpu::Features::empty(),
-                    required_limits: wgpu::Limits::default(),
-                    label: None,
-                    memory_hints: Default::default(),
-                },
-                None,
-            )
+            .request_device(&wgpu::DeviceDescriptor {
+                required_features: wgpu::Features::empty(),
+                required_limits: wgpu::Limits::default(),
+                label: None,
+                memory_hints: Default::default(),
+                experimental_features: ExperimentalFeatures::disabled(),
+                trace: Trace::Off,
+            })
             .await
             .unwrap();
 
@@ -180,6 +181,7 @@ impl State {
                         }),
                         store: wgpu::StoreOp::Store,
                     },
+                    depth_slice: None,
                 })],
                 depth_stencil_attachment: None,
                 occlusion_query_set: None,
@@ -197,15 +199,6 @@ impl State {
         output.present();
 
         Ok(())
-    }
-}
-
-impl Default for App {
-    fn default() -> Self {
-        Self {
-            window: None,
-            state: None,
-        }
     }
 }
 
@@ -273,26 +266,23 @@ impl ApplicationHandler for App {
             WindowEvent::KeyboardInput {
                 event:
                     KeyEvent {
-                        physical_key: PhysicalKey::Code(code),
-                        state: key_state,
+                        physical_key: PhysicalKey::Code(KeyCode::Escape | KeyCode::KeyQ),
+                        state: ElementState::Pressed,
                         ..
                     },
                 ..
-            } => match (code, key_state) {
-                (KeyCode::Escape, ElementState::Pressed) => {
-                    log::info!("Escape pressed, exiting");
-                    event_loop.exit();
-                }
-                _ => {}
-            },
+            } => {
+                log::info!("Quiting");
+                event_loop.exit();
+            }
             _ => {}
         }
     }
 }
 
-/// Run the application
 pub fn main() {
-    env_logger::init();
+    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+
     log::info!("Starting Cobalt");
 
     let start = Instant::now();

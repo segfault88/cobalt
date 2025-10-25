@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-wgpu = "23"
-winit = { version = "0.30", features = ["rwh_05"] }
-pollster = "0.4"
-env_logger = "0.11"
-log = "0.4"
-nalgebra-glm = "0.20.0"
+env_logger = "0.11.8"
+glyphon = { git = "https://github.com/grovesNL/glyphon.git" } # support for wgpu 27 is only in git for now
 hexasphere = "16.0.0"
+log = "0.4.28"
+pollster = "0.4.0"
+wgpu = { version = "27", features = ["wgpu-core"] }
+winit = "0.30"
