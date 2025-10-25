@@ -1,11 +1,12 @@
 use hexasphere::shapes::IcoSphere;
-use nalgebra_glm as glm;
+// use nalgebra_glm as glm;
 use std::sync::Arc;
 use std::time::Instant;
 use winit::{
     application::ApplicationHandler,
-    event::WindowEvent,
+    event::{ElementState, KeyEvent, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
+    keyboard::{KeyCode, PhysicalKey},
     window::{Window, WindowId},
 };
 
@@ -271,6 +272,21 @@ impl ApplicationHandler for App {
                     window.request_redraw();
                 }
             }
+            WindowEvent::KeyboardInput {
+                event:
+                    KeyEvent {
+                        physical_key: PhysicalKey::Code(code),
+                        state: key_state,
+                        ..
+                    },
+                ..
+            } => match (code, key_state) {
+                (KeyCode::Escape, ElementState::Pressed) => {
+                    println!("escape pressed, exiting");
+                    event_loop.exit();
+                }
+                _ => {}
+            },
             _ => {}
         }
     }
