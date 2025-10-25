@@ -1,6 +1,7 @@
 use hexasphere::shapes::IcoSphere;
 use nalgebra_glm as glm;
 use std::sync::Arc;
+use std::time::Instant;
 use winit::{
     application::ApplicationHandler,
     event::WindowEvent,
@@ -280,8 +281,12 @@ pub fn main() {
     env_logger::init();
     log::info!("Starting Cobalt");
 
-    let _s = IcoSphere::new(20, |_| ());
+    let start = Instant::now();
+
+    let _s = IcoSphere::new(50, |_| ());
     let _rp = _s.raw_points();
+
+    println!("icosphere in: {:?}", Instant::now().duration_since(start));
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
