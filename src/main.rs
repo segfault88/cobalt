@@ -1,7 +1,8 @@
-use env_logger::Env;
+use anyhow::Result;
 use hexasphere::shapes::IcoSphere;
 use std::sync::Arc;
 use std::time::Instant;
+use tracing::{debug, info};
 use wgpu::{ExperimentalFeatures, Trace};
 use winit::{
     application::ApplicationHandler,
@@ -38,7 +39,7 @@ impl State {
     pub async fn new(window: Arc<Window>) -> Self {
         let size = window.inner_size();
 
-        log::info!("Initializing wgpu...");
+        info!("Initializing wgpu...");
 
         // Create wgpu instance
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -59,7 +60,7 @@ impl State {
             .await
             .unwrap();
 
-        log::info!("Adapter: {:?}", adapter.get_info());
+        info!("Adapter: {:?}", adapter.get_info());
 
         // Request device and queue
         let (device, queue) = adapter
@@ -83,7 +84,7 @@ impl State {
             .copied()
             .unwrap_or(surface_caps.formats[0]);
 
-        log::info!("Surface format: {:?}", surface_format);
+        info!("Surface format: {:?}", surface_format);
 
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -98,7 +99,7 @@ impl State {
 
         surface.configure(&device, &config);
 
-        log::info!("wgpu initialized successfully");
+        info!("wgpu initialized successfully");
 
         Self {
             surface,
@@ -119,7 +120,7 @@ impl State {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
             self.surface.configure(&self.device, &self.config);
-            log::info!("Resized to {:?}", new_size);
+            info!("Resized to {:?}", new_size);
         }
     }
 
@@ -205,7 +206,7 @@ impl State {
 impl ApplicationHandler for App {
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_none() {
-            log::info!("Creating window...");
+            info!("Creating window...");
 
             let window_attributes = Window::default_attributes()
                 .with_title("Cobalt")
@@ -217,7 +218,7 @@ impl ApplicationHandler for App {
 
             // Initialize wgpu state
             self.state = Some(pollster::block_on(State::new(window)));
-            log::info!("State initialized");
+            info!("State initialized");
         }
     }
 
@@ -238,7 +239,7 @@ impl ApplicationHandler for App {
 
         match event {
             WindowEvent::CloseRequested => {
-                log::info!("Close requested");
+                info!("Close requested");
                 event_loop.exit();
             }
             WindowEvent::Resized(physical_size) => {
@@ -272,7 +273,7 @@ impl ApplicationHandler for App {
                     },
                 ..
             } => {
-                log::info!("Quiting");
+                info!("Quiting");
                 event_loop.exit();
             }
             _ => {}
@@ -280,21 +281,37 @@ impl ApplicationHandler for App {
     }
 }
 
-pub fn main() {
-    env_logger::Builder::from_env(Env::default().default_filter_or("info")).init();
+pub fn main() -> Result<()> {
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::Level::DEBUG)
+        .with_line_number(true)
+        .pretty()
+        .finish();
 
-    log::info!("Starting Cobalt");
+    tracing::subscriber::set_global_default(subscriber).expect("setting default subscriber failed");
+
+    let path = std::env::current_dir()?;
+    info!(path=?path, "Starting Cobalt");
 
     let start = Instant::now();
 
-    let _s = IcoSphere::new(50, |_| ());
-    let _rp = _s.raw_points();
+    let ico = IcoSphere::new(1, |_| ());
 
-    log::info!("Icosphere in: {:?}", Instant::now().duration_since(start));
+    let positions = ico.raw_points();
+    let indices = ico.get_all_indices();
 
-    let event_loop = EventLoop::new().unwrap();
+    info!(
+        positions = ?positions.len(),
+        indicies = ?indices.len(),
+        "Icosphere in: {:?}",
+        Instant::now().duration_since(start)
+    );
+
+    let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
 
     let mut app = App::default();
-    event_loop.run_app(&mut app).unwrap();
+    event_loop.run_app(&mut app)?;
+
+    Ok(())
 }
