@@ -6,7 +6,7 @@ edition = "2024"
 [dependencies]
 egui-wgpu = "0.33.0"
 env_logger = "0.11.8"
-glam = { version = "0.30.9", features = ["zerocopy", "core-simd", "bytemuck", "approx"] }
+glam = { version = "0.30.9", features = ["zerocopy", "bytemuck", "approx"] }
 glyphon = { git = "https://github.com/grovesNL/glyphon.git" } # support for wgpu 27 is only in git for now
 hexasphere = "16.0.0"
 log = "0.4.28"
