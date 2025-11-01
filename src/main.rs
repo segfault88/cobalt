@@ -307,6 +307,25 @@ pub fn main() -> Result<()> {
         Instant::now().duration_since(start)
     );
 
+    let start = Instant::now();
+
+    let (document, buffers, images) = gltf::import(
+        path.join("assets")
+            .join("gltf")
+            .join("Cube")
+            .join("Cube.gltf"),
+    )?;
+
+    let meshes = document.meshes();
+
+    info!(
+        meshes=?meshes.len(),
+        buffers=?buffers.len(),
+        images=?images.len(),
+        "glTF cube loaded in: {:?}",
+        Instant::now().duration_since(start)
+    );
+
     let event_loop = EventLoop::new()?;
     event_loop.set_control_flow(ControlFlow::Poll);
 
