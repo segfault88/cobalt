@@ -12,6 +12,8 @@ use winit::{
     window::{Window, WindowId},
 };
 
+mod camera;
+
 /// Main application state holding wgpu resources and game state
 #[derive(Default)]
 pub struct App {
